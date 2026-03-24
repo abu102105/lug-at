@@ -281,6 +281,14 @@ h1 { font-family:'Syne',sans-serif; font-size:clamp(22px,5vw,40px); font-weight:
 .recent-time { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
 
 #error { display:none; text-align:center; padding:26px; color:var(--accent2); font-size:13px; background:var(--surface); border-radius:13px; margin-top:12px; }
+
+/* CEFR filter badges */
+.cefr-filter-btn { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:5px 12px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+.cefr-filter-btn:hover { border-color:var(--accent); color:var(--text); }
+.cefr-filter-btn.active-a { background:rgba(106,255,205,0.18); border-color:rgba(106,255,205,0.55); color:var(--accent3); }
+.cefr-filter-btn.active-b { background:rgba(255,204,68,0.18);  border-color:rgba(255,204,68,0.55);  color:var(--phoneme); }
+.cefr-filter-btn.active-c { background:rgba(255,106,142,0.18); border-color:rgba(255,106,142,0.55); color:var(--accent2); }
+.cefr-filter-btn.active-all { background:rgba(124,106,255,0.18); border-color:rgba(124,106,255,0.55); color:var(--accent); }
 </style>
 </head>
 <body>
@@ -295,13 +303,11 @@ h1 { font-family:'Syne',sans-serif; font-size:clamp(22px,5vw,40px); font-weight:
 
 <!-- ══ SEARCH PAGE ══ -->
 <div class="page active" id="page-search">
-  <div id="apiSetup">
-    <div class="api-row">
-      <label>🔑 Groq API Key</label>
-      <input type="password" id="apiKeyInput" placeholder="gsk_...">
-      <button class="save-btn" onclick="saveKey()">Saqlash</button>
-    </div>
-    <div id="keyStatus"></div>
+  <!-- CEFR LEVEL FILTER -->
+  <div class="lang-section" id="cefrFilterSection">
+    <div class="lang-label">📊 So'z darajasi (CEFR)</div>
+    <div class="lang-grid" id="cefrGrid"></div>
+    <div id="cefrDesc" style="font-size:11px;color:var(--muted);margin-top:7px;font-family:'DM Mono',monospace;min-height:16px;"></div>
   </div>
 
   <div class="lang-section">
@@ -557,8 +563,42 @@ const LANGS = [
 // ════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════
-let apiKey = localStorage.getItem('groq_key') || '';
+let apiKey = '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';
 let currentLang = localStorage.getItem('ui_lang') || 'uz';
+let targetCefr = localStorage.getItem('target_cefr') || 'all';
+
+const CEFR_LEVELS = [
+  { code:'all', label:'🌐 Barchasi', cls:'all', desc:'Barcha darajadagi so\'zlarni tushuntiradi' },
+  { code:'A1',  label:'A1 — Boshlang\'ich', cls:'a', desc:'Eng oddiy, kundalik so\'zlar (beginner)' },
+  { code:'A2',  label:'A2 — Elementar',     cls:'a', desc:'Oddiy kundalik muloqot so\'zlari' },
+  { code:'B1',  label:'B1 — O\'rta',        cls:'b', desc:'Umumiy mavzularda so\'zlasha olish' },
+  { code:'B2',  label:'B2 — Yuqori o\'rta', cls:'b', desc:'Murakkab matnlarni tushunish darajasi' },
+  { code:'C1',  label:'C1 — Ilg\'or',       cls:'c', desc:'Chuqur akademik va professional nutq' },
+  { code:'C2',  label:'C2 — Ustoz',         cls:'c', desc:'Ona tili darajasiga yaqin professionall' },
+];
+
+function buildCefrGrid() {
+  const grid = document.getElementById('cefrGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  CEFR_LEVELS.forEach(lv => {
+    const btn = document.createElement('button');
+    const isActive = targetCefr === lv.code;
+    btn.className = 'cefr-filter-btn' + (isActive ? ' active-' + lv.cls : '');
+    btn.textContent = lv.label;
+    btn.onclick = () => setCefrFilter(lv.code);
+    grid.appendChild(btn);
+  });
+  const cur = CEFR_LEVELS.find(l => l.code === targetCefr);
+  const descEl = document.getElementById('cefrDesc');
+  if (descEl && cur) descEl.textContent = cur.desc;
+}
+
+function setCefrFilter(code) {
+  targetCefr = code;
+  localStorage.setItem('target_cefr', code);
+  buildCefrGrid();
+}
 let currentWord = '';
 let lastData = null;
 let recognition = null;
@@ -621,14 +661,10 @@ function setLang(code) {
 // ════════════════════════════════════════════
 window.onload = () => {
   buildLangGrid();
+  buildCefrGrid();
   setLang(currentLang);
   updateBadge();
   renderHistory();
-  if (apiKey) {
-    document.getElementById('apiKeyInput').value = apiKey;
-    document.getElementById('keyStatus').style.display = 'block';
-    document.getElementById('keyStatus').textContent = '✓ API key saqlangan';
-  }
 };
 
 function saveKey() {
@@ -803,7 +839,6 @@ function resetCoach(){
 async function lookupWord() {
   const word=document.getElementById('wordInput').value.trim();
   if(!word) return;
-  if(!apiKey){alert('Avval Groq API keyingizni kiriting!'); return;}
   currentWord=word; resetCoach();
   const u=getLang();
   document.getElementById('loading').style.display='block';
@@ -812,8 +847,12 @@ async function lookupWord() {
   document.getElementById('searchBtn').disabled=true;
   document.getElementById('loadingWord').textContent='"'+word+'"';
 
+  const cefrInstruction = targetCefr === 'all'
+    ? ''
+    : `\nIMPORTANT: The user's target English level is ${targetCefr}. Tailor ALL explanations, examples, vocabulary, and complexity to match a ${targetCefr} learner. Use simpler language for A1-A2, moderate for B1-B2, advanced for C1-C2.`;
+
   const prompt=`Expert English lexicographer. Analyze: "${word}"
-All explanatory text in ${u.name}. English sentences stay English but add ${u.name} translation.
+All explanatory text in ${u.name}. English sentences stay English but add ${u.name} translation.${cefrInstruction}
 RETURN ONLY VALID JSON:
 {"word":"${word}","translation":"1-3 word ${u.name} translation","partOfSpeech":"pos","cefr":"A1-C2",
 "phonetics":{"american":"/IPA/","british":"/IPA/"},
