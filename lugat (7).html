@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Lug'at</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c26; --border: #2a2a3a;
+  --accent: #7c6aff; --accent2: #ff6a8e; --accent3: #6affcd;
+  --text: #e8e8f0; --muted: #7070a0; --phoneme: #ffcc44;
+}
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: radial-gradient(ellipse 60% 40% at 20% 10%, rgba(124,106,255,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 50% 35% at 80% 90%, rgba(255,106,142,0.08) 0%, transparent 60%); }
+
+/* NAV TABS */
+.nav-tabs { position:sticky; top:0; z-index:100; background:rgba(10,10,15,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); display:flex; gap:0; margin-bottom:0; }
+.nav-tab { flex:1; padding:12px 8px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:var(--muted); background:none; border:none; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:5px; border-bottom:2px solid transparent; }
+.nav-tab:hover { color:var(--text); }
+.nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.nav-tab .tab-badge { background:var(--accent); color:#fff; font-size:9px; padding:1px 5px; border-radius:10px; font-weight:700; display:none; }
+.nav-tab .tab-badge.show { display:inline; }
+
+/* PAGES */
+.page { display:none; padding:20px 18px 80px; max-width:800px; margin:0 auto; position:relative; z-index:1; }
+.page.active { display:block; }
+
+/* API Key */
+#apiSetup { background:var(--surface); border:1.5px solid var(--accent); border-radius:14px; padding:14px 16px; margin-bottom:16px; }
+.api-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.api-row label { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:var(--accent); white-space:nowrap; }
+#apiKeyInput { flex:1; min-width:150px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:7px 11px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text); outline:none; }
+#apiKeyInput:focus { border-color:var(--accent); }
+.save-btn { background:var(--accent); border:none; border-radius:7px; padding:7px 13px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#fff; cursor:pointer; }
+.save-btn:hover { opacity:0.85; }
+#keyStatus { font-size:11px; color:var(--accent3); margin-top:4px; display:none; }
+
+/* Lang picker */
+.lang-section { margin-bottom:16px; }
+.lang-label { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.lang-grid { display:flex; flex-wrap:wrap; gap:5px; }
+.lang-btn { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:5px 10px; font-family:'Syne',sans-serif; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:4px; }
+.lang-btn:hover { border-color:var(--accent); color:var(--text); }
+.lang-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.lang-flag { font-size:13px; line-height:1; }
+
+/* Header */
+.header { text-align:center; margin-bottom:20px; }
+.logo { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.28em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+h1 { font-family:'Syne',sans-serif; font-size:clamp(22px,5vw,40px); font-weight:800; line-height:1.05;
+  background:linear-gradient(135deg,var(--text) 30%,var(--accent) 70%,var(--accent2) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:5px; }
+.tagline { font-size:12px; color:var(--muted); font-weight:300; }
+
+/* Search */
+.search-inner { display:flex; background:var(--surface); border:1.5px solid var(--border); border-radius:13px; overflow:hidden; margin-bottom:14px; transition:border-color 0.2s; }
+.search-inner:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,106,255,0.15); }
+#wordInput { flex:1; background:transparent; border:none; outline:none; padding:12px 16px; font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:var(--text); }
+#wordInput::placeholder { color:var(--muted); font-weight:400; font-size:14px; }
+#searchBtn { background:linear-gradient(135deg,var(--accent),#9b5fff); border:none; padding:9px 18px; cursor:pointer; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#fff; letter-spacing:0.05em; text-transform:uppercase; margin:4px; border-radius:8px; transition:opacity 0.2s; white-space:nowrap; }
+#searchBtn:hover { opacity:0.88; }
+#searchBtn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* History pills */
+#historyRow { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:16px; min-height:0; }
+.history-chip { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:11px; color:var(--muted); cursor:pointer; transition:all 0.2s; font-family:'DM Mono',monospace; display:flex; align-items:center; gap:5px; }
+.history-chip:hover { border-color:var(--accent); color:var(--text); }
+.history-chip .hc-remove { font-size:12px; color:var(--muted); line-height:1; opacity:0.5; }
+.history-chip .hc-remove:hover { color:var(--accent2); opacity:1; }
+
+/* Quick chips */
+.quick-words { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:18px; }
+.quick-chip { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 10px; font-size:11px; color:var(--muted); cursor:pointer; transition:all 0.2s; font-family:'DM Mono',monospace; }
+.quick-chip:hover { border-color:var(--accent3); color:var(--accent3); }
+
+/* Loading */
+#loading { display:none; text-align:center; padding:44px 0; }
+.spinner { width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 10px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-word { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+.loading-sub { font-size:12px; color:var(--muted); }
+
+/* Result */
+#result { display:none; animation:fadeUp 0.3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* Word hero */
+.word-hero { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:9px; position:relative; overflow:hidden; }
+.word-hero::before { content:''; position:absolute; top:-50px; right:-50px; width:180px; height:180px; background:radial-gradient(circle,rgba(124,106,255,0.15),transparent 70%); pointer-events:none; }
+.hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.word-title { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; color:var(--text); line-height:1; margin-bottom:5px; }
+.word-translation { font-size:14px; color:var(--accent3); font-weight:400; margin-bottom:6px; }
+.hero-badges { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.word-pos { display:inline-block; background:rgba(124,106,255,0.2); border:1px solid rgba(124,106,255,0.4); color:var(--accent); font-family:'DM Mono',monospace; font-size:10px; padding:2px 8px; border-radius:20px; letter-spacing:0.06em; text-transform:uppercase; }
+.cefr-badge { display:inline-block; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.cefr-a { background:rgba(106,255,205,0.15); border:1px solid rgba(106,255,205,0.4); color:var(--accent3); }
+.cefr-b { background:rgba(255,204,68,0.15); border:1px solid rgba(255,204,68,0.4); color:var(--phoneme); }
+.cefr-c { background:rgba(255,106,142,0.15); border:1px solid rgba(255,106,142,0.4); color:var(--accent2); }
+.save-word-btn { display:inline-flex; align-items:center; gap:5px; background:rgba(106,255,205,0.1); border:1px solid rgba(106,255,205,0.3); border-radius:8px; padding:6px 11px; cursor:pointer; transition:all 0.2s; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent3); }
+.save-word-btn:hover { background:rgba(106,255,205,0.2); }
+.save-word-btn.saved { background:rgba(106,255,205,0.2); border-color:var(--accent3); }
+
+.hero-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.youglish-btn { display:inline-flex; align-items:center; gap:5px; background:rgba(255,106,142,0.1); border:1px solid rgba(255,106,142,0.3); border-radius:8px; padding:6px 11px; cursor:pointer; transition:all 0.2s; text-decoration:none; }
+.youglish-btn:hover { background:rgba(255,106,142,0.2); }
+.yt-icon { width:14px; height:14px; background:var(--accent2); border-radius:3px; display:flex; align-items:center; justify-content:center; }
+.yt-icon svg { width:6px; height:6px; }
+.youglish-btn span { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--accent2); }
+
+.phonetics-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:9px; }
+.phonetic-tag { display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; transition:all 0.2s; }
+.phonetic-tag:hover { border-color:var(--phoneme); background:rgba(255,204,68,0.08); }
+.phonetic-tag:active { transform:scale(0.97); }
+.phonetic-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; font-family:'DM Mono',monospace; }
+.phonetic-text { font-family:'DM Mono',monospace; font-size:13px; color:var(--phoneme); }
+.play-icon { width:18px; height:18px; background:var(--phoneme); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.play-icon svg { width:7px; height:7px; margin-left:1px; }
+.speak-status { font-size:11px; color:var(--muted); display:none; margin-top:5px; }
+
+/* Sections */
+.section { background:var(--surface); border:1px solid var(--border); border-radius:15px; padding:18px; margin-bottom:9px; }
+.section-label { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden; }
+.section-label > span.line { width:14px; min-width:14px; height:1px; background:var(--border); display:inline-block; flex-shrink:0; }
+.section-label > span.title { overflow:hidden; text-overflow:ellipsis; }
+.core-meaning { font-size:14px; line-height:1.8; color:var(--text); font-weight:300; }
+.core-meaning strong { color:var(--accent3); font-weight:500; }
+.etymology-text { font-size:13px; line-height:1.7; color:var(--text); font-weight:300; font-style:italic; padding-left:12px; border-left:2px solid var(--accent); }
+.etymology-text em { font-style:normal; color:var(--phoneme); font-family:'DM Mono',monospace; font-size:12px; }
+.when-grid { display:flex; flex-direction:column; gap:6px; }
+.when-item { display:flex; gap:9px; background:var(--surface2); border-radius:9px; padding:10px 12px; align-items:flex-start; }
+.when-badge { font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; padding:2px 7px; border-radius:5px; white-space:nowrap; margin-top:2px; flex-shrink:0; }
+.when-badge.use    { background:rgba(106,255,205,0.15); color:var(--accent3); border:1px solid rgba(106,255,205,0.3); }
+.when-badge.avoid  { background:rgba(255,106,142,0.15); color:var(--accent2); border:1px solid rgba(255,106,142,0.3); }
+.when-badge.formal { background:rgba(124,106,255,0.15); color:var(--accent);  border:1px solid rgba(124,106,255,0.3); }
+.when-badge.casual { background:rgba(255,204,68,0.15);  color:var(--phoneme); border:1px solid rgba(255,204,68,0.3); }
+.when-text { font-size:13px; line-height:1.6; color:var(--text); font-weight:300; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:9px; }
+@media(max-width:480px) { .two-col { grid-template-columns:1fr; } }
+.two-col .section { margin-bottom:0; }
+.word-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.word-chip { display:flex; flex-direction:column; gap:2px; }
+.chip-btn { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:5px 10px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text); cursor:pointer; transition:all 0.2s; }
+.chip-btn.syn:hover { border-color:var(--accent3); color:var(--accent3); background:rgba(106,255,205,0.08); }
+.chip-btn.ant:hover { border-color:var(--accent2); color:var(--accent2); background:rgba(255,106,142,0.08); }
+.chip-ctx { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; padding:0 2px; }
+.colloc-list { display:flex; flex-direction:column; gap:8px; }
+.colloc-item { display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+.colloc-phrase { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent3); flex-shrink:0; min-width:130px; }
+.colloc-right { display:flex; flex-direction:column; gap:1px; }
+.colloc-ex { font-size:13px; color:var(--text); font-weight:300; font-style:italic; }
+.colloc-tr { font-size:11px; color:var(--muted); }
+.example-list { display:flex; flex-direction:column; gap:11px; }
+.example-item { border-left:2px solid var(--accent); padding-left:12px; }
+.example-item.casual   { border-left-color:var(--accent2); }
+.example-item.academic { border-left-color:var(--accent3); }
+.example-ctx { font-size:9px; font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:3px; }
+.example-text { font-size:13px; line-height:1.65; color:var(--text); font-style:italic; font-weight:300; }
+.example-text em { font-style:normal; color:var(--accent); font-weight:500; }
+.example-tr { font-size:11px; color:var(--accent3); margin-top:3px; }
+.nuance-text { font-size:13px; line-height:1.8; color:var(--text); font-weight:300; }
+.nuance-text .hl { background:rgba(255,204,68,0.12); border:1px solid rgba(255,204,68,0.25); border-radius:4px; padding:1px 5px; color:var(--phoneme); font-family:'DM Mono',monospace; font-size:12px; }
+.mistake-list { display:flex; flex-direction:column; gap:7px; }
+.mistake-item { display:flex; gap:9px; align-items:flex-start; background:var(--surface2); border-radius:9px; padding:10px 12px; }
+.mistake-icon { font-size:13px; flex-shrink:0; margin-top:1px; }
+.mistake-text { font-size:12px; line-height:1.6; color:var(--text); }
+.mistake-text .wrong { color:var(--accent2); text-decoration:line-through; font-family:'DM Mono',monospace; }
+.mistake-text .right { color:var(--accent3); font-family:'DM Mono',monospace; }
+
+/* Pronunciation Coach */
+.coach-wrap { display:flex; flex-direction:column; gap:12px; padding-top:2px; }
+.coach-top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.coach-score-wrap { display:flex; align-items:center; gap:10px; }
+.score-ring { width:64px; height:64px; flex-shrink:0; }
+.score-label { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
+.score-said { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--text); }
+.coach-btns { display:flex; gap:7px; flex-wrap:wrap; }
+.coach-btn { display:flex; align-items:center; gap:6px; border:none; border-radius:9px; padding:9px 14px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.coach-btn svg { width:15px; height:15px; flex-shrink:0; }
+.coach-btn.listen { background:rgba(124,106,255,0.2); border:1px solid rgba(124,106,255,0.4); color:var(--accent); }
+.coach-btn.listen:hover { background:rgba(124,106,255,0.35); }
+.coach-btn.listen.recording { background:rgba(255,106,142,0.2); border-color:rgba(255,106,142,0.5); color:var(--accent2); animation:pulse 1s ease-in-out infinite; }
+.coach-btn.model { background:rgba(106,255,205,0.1); border:1px solid rgba(106,255,205,0.3); color:var(--accent3); }
+.coach-btn.model:hover { background:rgba(106,255,205,0.2); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.coach-feedback { background:var(--surface2); border-radius:11px; padding:13px 14px; }
+.fb-title { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:9px; }
+.fb-items { display:flex; flex-direction:column; gap:6px; }
+.fb-item { display:flex; gap:9px; align-items:flex-start; font-size:12px; line-height:1.55; color:var(--text); }
+.fb-item .fb-icon { flex-shrink:0; font-size:13px; margin-top:1px; }
+.wrong-sound { color:var(--accent2); font-family:'DM Mono',monospace; font-size:11px; background:rgba(255,106,142,0.12); padding:1px 5px; border-radius:4px; }
+.right-sound  { color:var(--accent3); font-family:'DM Mono',monospace; font-size:11px; background:rgba(106,255,205,0.12); padding:1px 5px; border-radius:4px; }
+.coach-syllables { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+.syl-label { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.1em; margin-right:3px; }
+.syl-block { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; padding:4px 9px; border-radius:6px; border:1px solid; }
+.syl-block.good { background:rgba(106,255,205,0.12); border-color:rgba(106,255,205,0.35); color:var(--accent3); }
+.syl-block.bad  { background:rgba(255,106,142,0.12); border-color:rgba(255,106,142,0.4);  color:var(--accent2); }
+.syl-block.ok   { background:rgba(255,204,68,0.10);  border-color:rgba(255,204,68,0.3);   color:var(--phoneme); }
+.coach-try-again { background:none; border:1px solid var(--border); border-radius:7px; padding:5px 12px; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+.coach-try-again:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ── NOTEBOOK PAGE ── */
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+.page-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--text); }
+.page-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+.notebook-empty { text-align:center; padding:50px 20px; color:var(--muted); }
+.notebook-empty .ne-icon { font-size:40px; margin-bottom:12px; }
+.notebook-empty p { font-size:14px; line-height:1.6; }
+.notebook-grid { display:flex; flex-direction:column; gap:8px; }
+.nb-card { background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.2s; }
+.nb-card:hover { border-color:var(--accent); background:rgba(124,106,255,0.05); }
+.nb-word { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); flex:1; }
+.nb-tr { font-size:12px; color:var(--accent3); }
+.nb-cefr { font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px; border-radius:10px; }
+.nb-pos { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+.nb-date { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+.nb-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 4px; border-radius:4px; transition:color 0.2s; }
+.nb-del:hover { color:var(--accent2); }
+.nb-meta { display:flex; flex-direction:column; gap:2px; align-items:flex-end; }
+.nb-actions { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.nb-btn { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:7px 13px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+.nb-btn:hover { border-color:var(--accent); color:var(--accent); }
+.nb-btn.danger:hover { border-color:var(--accent2); color:var(--accent2); }
+
+/* ── FLASHCARD PAGE ── */
+.fc-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; padding-top:10px; }
+.fc-progress-bar { width:100%; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.fc-progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s ease; }
+.fc-counter { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); text-align:center; }
+.fc-card { width:100%; max-width:480px; min-height:220px; perspective:1000px; cursor:pointer; }
+.fc-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 0.5s; min-height:220px; }
+.fc-card.flipped .fc-inner { transform:rotateY(180deg); }
+.fc-front, .fc-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; padding:28px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--surface); border:1px solid var(--border); min-height:220px; }
+.fc-back { transform:rotateY(180deg); background:var(--surface2); }
+.fc-word { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--text); margin-bottom:8px; }
+.fc-ipa  { font-family:'DM Mono',monospace; font-size:14px; color:var(--phoneme); margin-bottom:6px; }
+.fc-hint { font-size:12px; color:var(--muted); }
+.fc-translation { font-size:20px; color:var(--accent3); font-weight:600; margin-bottom:8px; }
+.fc-meaning { font-size:13px; color:var(--text); line-height:1.6; font-weight:300; }
+.fc-btns { display:flex; gap:10px; width:100%; max-width:480px; }
+.fc-btn { flex:1; padding:12px; border:none; border-radius:12px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.fc-btn.bad  { background:rgba(255,106,142,0.15); border:1px solid rgba(255,106,142,0.4); color:var(--accent2); }
+.fc-btn.ok   { background:rgba(255,204,68,0.12);  border:1px solid rgba(255,204,68,0.3);  color:var(--phoneme); }
+.fc-btn.good { background:rgba(106,255,205,0.12); border:1px solid rgba(106,255,205,0.35); color:var(--accent3); }
+.fc-btn:hover { filter:brightness(1.2); }
+.fc-flip-hint { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; }
+.fc-done { text-align:center; padding:40px 20px; }
+.fc-done .done-icon { font-size:48px; margin-bottom:14px; }
+.fc-done h3 { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--text); margin-bottom:8px; }
+.fc-done p { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:18px; }
+.fc-restart { background:var(--accent); border:none; border-radius:10px; padding:11px 22px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#fff; cursor:pointer; }
+.fc-empty { text-align:center; padding:50px 20px; color:var(--muted); }
+
+/* ── PROGRESS PAGE ── */
+.stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:16px; }
+@media(min-width:500px) { .stats-grid { grid-template-columns:repeat(4,1fr); } }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:16px 14px; text-align:center; }
+.stat-num { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:var(--accent); line-height:1; margin-bottom:4px; }
+.stat-num.green { color:var(--accent3); }
+.stat-num.amber { color:var(--phoneme); }
+.stat-num.pink  { color:var(--accent2); }
+.stat-label { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; }
+.cefr-breakdown { background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:18px; margin-bottom:9px; }
+.cefr-row { display:grid; grid-template-columns:36px 1fr 32px; align-items:center; gap:12px; margin-bottom:10px; }
+.cefr-row:last-child { margin-bottom:0; }
+.cefr-row-label { font-family:'DM Mono',monospace; font-size:12px; font-weight:700; white-space:nowrap; }
+.cefr-bar-wrap { height:10px; background:var(--border); border-radius:5px; overflow:hidden; min-width:0; }
+.cefr-bar { height:100%; border-radius:5px; transition:width 0.6s ease; min-width:0; }
+.cefr-bar.a { background:var(--accent3); }
+.cefr-bar.b { background:var(--phoneme); }
+.cefr-bar.c { background:var(--accent2); }
+.cefr-count { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); text-align:right; white-space:nowrap; }
+.recent-list { display:flex; flex-direction:column; gap:6px; }
+.recent-item { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 13px; cursor:pointer; transition:all 0.2s; }
+.recent-item:hover { border-color:var(--accent); }
+.recent-word { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; flex:1; }
+.recent-tr { font-size:12px; color:var(--accent3); }
+.recent-time { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+
+#error { display:none; text-align:center; padding:26px; color:var(--accent2); font-size:13px; background:var(--surface); border-radius:13px; margin-top:12px; }
+</style>
+</head>
+<body>
+
+<!-- NAV TABS -->
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('search')" id="tab-search">🔍 <span id="tSearch">Lug'at</span></button>
+  <button class="nav-tab" onclick="showPage('notebook')" id="tab-notebook">📚 <span id="tNotebook">Daftar</span> <span class="tab-badge" id="badgeNotebook">0</span></button>
+  <button class="nav-tab" onclick="showPage('flashcard')" id="tab-flashcard">🔁 <span id="tFlashcard">Flashcard</span></button>
+  <button class="nav-tab" onclick="showPage('progress')" id="tab-progress">📊 <span id="tProgress">Progress</span></button>
+</nav>
+
+<!-- ══ SEARCH PAGE ══ -->
+<div class="page active" id="page-search">
+  <div id="apiSetup">
+    <div class="api-row">
+      <label>🔑 Groq API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="gsk_...">
+      <button class="save-btn" onclick="saveKey()">Saqlash</button>
+    </div>
+    <div id="keyStatus"></div>
+  </div>
+
+  <div class="lang-section">
+    <div class="lang-label">Til / Language</div>
+    <div class="lang-grid" id="langGrid"></div>
+  </div>
+
+  <div class="header">
+    <div class="logo">Groq • AI Lug'at</div>
+    <h1 id="h1text">So'zni his qiling</h1>
+    <p class="tagline" id="tagtext">Ma'no · Talaffuz · Etimologiya · CEFR · Antonimlar</p>
+  </div>
+
+  <div class="search-inner">
+    <input type="text" id="wordInput" placeholder="Ingliz so'zini yozing..." autocomplete="off" spellcheck="false">
+    <button id="searchBtn" onclick="lookupWord()">Izla →</button>
+  </div>
+
+  <!-- History -->
+  <div id="historyRow"></div>
+
+  <!-- Quick chips -->
+  <div class="quick-words">
+    <span class="quick-chip" onclick="q('resilient')">resilient</span>
+    <span class="quick-chip" onclick="q('ambiguous')">ambiguous</span>
+    <span class="quick-chip" onclick="q('pragmatic')">pragmatic</span>
+    <span class="quick-chip" onclick="q('eloquent')">eloquent</span>
+    <span class="quick-chip" onclick="q('subtle')">subtle</span>
+    <span class="quick-chip" onclick="q('leverage')">leverage</span>
+    <span class="quick-chip" onclick="q('consent')">consent</span>
+    <span class="quick-chip" onclick="q('diligent')">diligent</span>
+    <span class="quick-chip" onclick="q('profound')">profound</span>
+    <span class="quick-chip" onclick="q('empathy')">empathy</span>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="loading-word" id="loadingWord"></div>
+    <div class="loading-sub" id="loadingSub">Groq tahlil qilmoqda...</div>
+  </div>
+  <div id="error"></div>
+
+  <div id="result">
+    <div class="word-hero">
+      <div class="hero-top">
+        <div>
+          <div class="word-title" id="resWord"></div>
+          <div class="word-translation" id="resTranslation"></div>
+          <div class="hero-badges">
+            <span id="resPos"></span>
+            <span id="resCefr"></span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <button class="save-word-btn" id="saveWordBtn" onclick="toggleSaveWord()">
+            <span id="saveWordIcon">＋</span> <span id="saveWordLabel">Saqlash</span>
+          </button>
+          <a id="youglishBtn" href="#" target="_blank" class="youglish-btn" onclick="openYouglish(event)">
+            <div class="yt-icon"><svg viewBox="0 0 10 10" fill="white"><polygon points="2,1 9,5 2,9"/></svg></div>
+            <span id="youglishLabel">YouTube</span>
+          </a>
+        </div>
+      </div>
+      <div class="phonetics-row" id="resPhonetics"></div>
+      <div class="speak-status" id="speakStatus"></div>
+    </div>
+
+    <!-- Pronunciation Coach -->
+    <div class="section">
+      <div class="section-label"><span class="line"></span><span class="title" id="lCoach">🎤 Talaffuz trener</span><span class="line"></span></div>
+      <div class="coach-wrap">
+        <div class="coach-top">
+          <div class="coach-score-wrap" id="coachScoreWrap" style="display:none">
+            <svg class="score-ring" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#2a2a3a" stroke-width="6"/>
+              <circle id="scoreCircle" cx="40" cy="40" r="34" fill="none" stroke="#7c6aff" stroke-width="6"
+                stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"
+                transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 0.8s ease,stroke 0.5s"/>
+              <text id="scoreText" x="40" y="44" text-anchor="middle" font-family="Syne,sans-serif" font-size="18" font-weight="800" fill="#e8e8f0">0%</text>
+            </svg>
+            <div>
+              <div class="score-label" id="scoreLabel">Siz aytdingiz</div>
+              <div class="score-said" id="scoreSaid"></div>
+            </div>
+          </div>
+          <div class="coach-btns">
+            <button class="coach-btn listen" id="listenCoachBtn" onclick="listenCoach()">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a4 4 0 0 1 4 4v4a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" fill="currentColor"/><path d="M5 10a5 5 0 0 0 10 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="15" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="18" x2="13" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span id="listenCoachLabel">O'zingiz gapiring</span>
+            </button>
+            <button class="coach-btn model" onclick="speakWord(currentWord,'en-US')">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 7h3l4-4v14l-4-4H3V7z"/><path d="M14 7a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+              <span id="modelLabel">Namuna eshit</span>
+            </button>
+          </div>
+        </div>
+        <div id="coachFeedback" style="display:none" class="coach-feedback"></div>
+        <div id="coachSyllables" style="display:none" class="coach-syllables"></div>
+      </div>
+    </div>
+
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lMeaning">Asosiy ma'no</span><span class="line"></span></div><div class="core-meaning" id="resMeaning"></div></div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lEtym">So'z tarixi</span><span class="line"></span></div><div class="etymology-text" id="resEtymology"></div></div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lWhen">Qachon ishlatiladi</span><span class="line"></span></div><div class="when-grid" id="resWhen"></div></div>
+    <div class="two-col">
+      <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lSyn">Sinonimlar</span><span class="line"></span></div><div class="word-chips" id="resSynonyms"></div></div>
+      <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lAnt">Antonimlar</span><span class="line"></span></div><div class="word-chips" id="resAntonyms"></div></div>
+    </div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lColloc">Kollokatsiyalar</span><span class="line"></span></div><div class="colloc-list" id="resCollocations"></div></div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lExamples">Real misollar</span><span class="line"></span></div><div class="example-list" id="resExamples"></div></div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lNuance">Nozik farqlar</span><span class="line"></span></div><div class="nuance-text" id="resNuance"></div></div>
+    <div class="section"><div class="section-label"><span class="line"></span><span class="title" id="lMistakes">Xatolar</span><span class="line"></span></div><div class="mistake-list" id="resMistakes"></div></div>
+  </div>
+</div>
+
+<!-- ══ NOTEBOOK PAGE ══ -->
+<div class="page" id="page-notebook">
+  <div class="page-header">
+    <div><div class="page-title" id="nbTitle">📚 So'z daftari</div><div class="page-sub" id="nbSub">Saqlangan so'zlar</div></div>
+  </div>
+  <div class="nb-actions">
+    <button class="nb-btn" onclick="showPage('flashcard')">🔁 Flashcard o'yin</button>
+    <button class="nb-btn danger" onclick="clearNotebook()" id="nbClearBtn">🗑 Hammasini o'chir</button>
+  </div>
+  <div id="notebookList"></div>
+</div>
+
+<!-- ══ FLASHCARD PAGE ══ -->
+<div class="page" id="page-flashcard">
+  <div class="page-header">
+    <div><div class="page-title">🔁 Flashcard</div><div class="page-sub" id="fcSub">Spaced repetition</div></div>
+  </div>
+  <div id="fcContent"></div>
+</div>
+
+<!-- ══ PROGRESS PAGE ══ -->
+<div class="page" id="page-progress">
+  <div class="page-header">
+    <div><div class="page-title">📊 Progress</div><div class="page-sub" id="pgSub">Statistika</div></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label" id="statTotalL">Jami so'z</div></div>
+    <div class="stat-card"><div class="stat-num green" id="statToday">0</div><div class="stat-label" id="statTodayL">Bugun</div></div>
+    <div class="stat-card"><div class="stat-num amber" id="statStreak">0</div><div class="stat-label" id="statStreakL">Kun ketma-ket</div></div>
+    <div class="stat-card"><div class="stat-num pink" id="statSearches">0</div><div class="stat-label" id="statSearchesL">Qidiruvlar</div></div>
+  </div>
+  <div class="cefr-breakdown section" style="margin-bottom:14px">
+    <div class="section-label" style="margin-bottom:14px"><span class="line"></span><span class="title">CEFR darajasi</span><span class="line"></span></div>
+    <div id="cefrBreakdown"></div>
+  </div>
+  <div class="section">
+    <div class="section-label"><span class="line"></span><span class="title" id="lRecent">Oxirgi qidiruvlar</span><span class="line"></span></div>
+    <div class="recent-list" id="recentList"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+function load(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+let notebook    = load('nb_words', []);       // [{word, translation, pos, cefr, meaning, ipa_us, ipa_uk, savedAt, nextReview, interval, easeFactor}]
+let searchHist  = load('nb_history', []);     // [{word, translation, searchedAt}]
+let stats       = load('nb_stats', { totalSearches: 0, streakDays: 0, lastDate: '' });
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function addHistory(word, translation) {
+  searchHist = searchHist.filter(h => h.word.toLowerCase() !== word.toLowerCase());
+  searchHist.unshift({ word, translation: translation||'', searchedAt: Date.now() });
+  if (searchHist.length > 30) searchHist = searchHist.slice(0, 30);
+  save('nb_history', searchHist);
+  stats.totalSearches = (stats.totalSearches||0) + 1;
+  const today = todayStr();
+  if (stats.lastDate !== today) {
+    const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    stats.streakDays = stats.lastDate === yesterday ? (stats.streakDays||0)+1 : 1;
+    stats.lastDate = today;
+  }
+  save('nb_stats', stats);
+  renderHistory();
+  updateBadge();
+}
+
+function isInNotebook(word) { return notebook.some(n => n.word.toLowerCase() === word.toLowerCase()); }
+
+function saveToNotebook(data) {
+  if (isInNotebook(data.word)) return;
+  notebook.unshift({
+    word: data.word, translation: data.translation||'', pos: data.partOfSpeech||'',
+    cefr: data.cefr||'', meaning: (data.coreMeaning||'').replace(/<[^>]+>/g,'').slice(0,120),
+    ipa_us: data.phonetics?.american||'', ipa_uk: data.phonetics?.british||'',
+    savedAt: Date.now(), nextReview: Date.now(), interval: 1, easeFactor: 2.5
+  });
+  save('nb_words', notebook);
+  updateBadge();
+  updateSaveBtn(true);
+}
+
+function removeFromNotebook(word) {
+  notebook = notebook.filter(n => n.word.toLowerCase() !== word.toLowerCase());
+  save('nb_words', notebook);
+  updateBadge();
+  if (currentWord.toLowerCase() === word.toLowerCase()) updateSaveBtn(false);
+}
+
+function updateBadge() {
+  const b = document.getElementById('badgeNotebook');
+  b.textContent = notebook.length;
+  b.classList.toggle('show', notebook.length > 0);
+}
+
+function updateSaveBtn(saved) {
+  const btn = document.getElementById('saveWordBtn');
+  if (!btn) return;
+  btn.classList.toggle('saved', saved);
+  document.getElementById('saveWordIcon').textContent = saved ? '✓' : '＋';
+  document.getElementById('saveWordLabel').textContent = saved ? 'Saqlangan' : 'Saqlash';
+}
+
+function toggleSaveWord() {
+  if (!lastData) return;
+  if (isInNotebook(currentWord)) { removeFromNotebook(currentWord); }
+  else { saveToNotebook(lastData); }
+}
+
+// ════════════════════════════════════════════
+// LANGUAGES
+// ════════════════════════════════════════════
+const LANGS = [
+  { code:'uz',flag:'🇺🇿',label:'UZ',name:'uzbek',      h1:"So'zni his qiling",   tag:"Ma'no · Talaffuz · Etimologiya · CEFR", search:"Ingliz so'zini yozing...", btn:"Izla →",    loading:"Groq tahlil qilmoqda...", youglish:"YouTube", lMeaning:"Asosiy ma'no",lEtym:"So'z tarixi",lWhen:"Qachon ishlatiladi",lSyn:"Sinonimlar",lAnt:"Antonimlar",lColloc:"Kollokatsiyalar",lExamples:"Real misollar",lNuance:"Nozik farqlar",lMistakes:"Xatolar",lCoach:"🎤 Talaffuz trener",coachSpeak:"O'zingiz gapiring",coachModel:"Namuna eshit",coachFix:"Tuzatishlar",lRecent:"Oxirgi qidiruvlar",tSearch:"Lug'at",tNotebook:"Daftar",tFlashcard:"Flashcard",tProgress:"Progress",whenU:"✓ Ishlatish",whenA:"✗ Qochish",whenF:"Rasmiy",whenC:"Norasmiy",exF:"Rasmiy",exC:"Norasmiy",exAc:"Akademik",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'ru',flag:'🇷🇺',label:'RU',name:'russian',     h1:"Почувствуйте слово",  tag:"Значение · Произношение · Этимология",   search:"Введите слово...",         btn:"Найти →",   loading:"Groq анализирует...",     youglish:"YouTube", lMeaning:"Значение",    lEtym:"Этимология", lWhen:"Когда использовать",lSyn:"Синонимы",  lAnt:"Антонимы",  lColloc:"Коллокации",   lExamples:"Примеры",     lNuance:"Нюансы",      lMistakes:"Ошибки",   lCoach:"🎤 Тренер произношения",coachSpeak:"Говорите",coachModel:"Образец",coachFix:"Исправления",lRecent:"Последние запросы",tSearch:"Словарь",tNotebook:"Тетрадь",tFlashcard:"Карточки",tProgress:"Прогресс",whenU:"✓ Использовать",whenA:"✗ Избегать",whenF:"Официально",whenC:"Разговорно",exF:"Официальный",exC:"Разговорный",exAc:"Академический",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'en',flag:'🇬🇧',label:'EN',name:'english',     h1:"Feel the Word",       tag:"Meaning · Pronunciation · Etymology",     search:"Type a word...",           btn:"Search →",  loading:"Analyzing...",            youglish:"YouTube", lMeaning:"Core Meaning",lEtym:"Etymology",  lWhen:"When to use",       lSyn:"Synonyms",  lAnt:"Antonyms",  lColloc:"Collocations", lExamples:"Examples",    lNuance:"Nuance",      lMistakes:"Mistakes", lCoach:"🎤 Pronunciation Coach",coachSpeak:"Speak now",coachModel:"Hear model",coachFix:"Corrections",lRecent:"Recent searches",tSearch:"Dictionary",tNotebook:"Notebook",tFlashcard:"Flashcards",tProgress:"Progress",whenU:"✓ Use",whenA:"✗ Avoid",whenF:"Formal",whenC:"Casual",exF:"Formal",exC:"Casual",exAc:"Academic",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'tr',flag:'🇹🇷',label:'TR',name:'turkish',     h1:"Kelimeyi Hissedin",   tag:"Anlam · Telaffuz · Etimoloji",            search:"Kelime girin...",          btn:"Ara →",     loading:"Groq analiz ediyor...",   youglish:"YouTube", lMeaning:"Ana Anlam",   lEtym:"Etimoloji",  lWhen:"Ne zaman kullanılır",lSyn:"Eş Anlamlı",lAnt:"Zıt Anlamlı",lColloc:"Kollokasyon",  lExamples:"Örnekler",    lNuance:"Farklar",     lMistakes:"Hatalar",  lCoach:"🎤 Telaffuz Koçu",coachSpeak:"Siz konuşun",coachModel:"Örnek",coachFix:"Düzeltmeler",lRecent:"Son aramalar",tSearch:"Sözlük",tNotebook:"Defter",tFlashcard:"Kartlar",tProgress:"İlerleme",whenU:"✓ Kullan",whenA:"✗ Kaçın",whenF:"Resmi",whenC:"Gündelik",exF:"Resmi",exC:"Gündelik",exAc:"Akademik",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'ar',flag:'🇸🇦',label:'AR',name:'arabic',      h1:"أحس بالكلمة",         tag:"المعنى · النطق · الأصل",                search:"اكتب كلمة...",             btn:"ابحث",      loading:"يحلل...",                 youglish:"YouTube", lMeaning:"المعنى",      lEtym:"الأصل",      lWhen:"متى تُستخدم",       lSyn:"المرادفات",lAnt:"الأضداد",  lColloc:"التلازم",      lExamples:"أمثلة",       lNuance:"الفروق",      lMistakes:"الأخطاء",  lCoach:"🎤 مدرب النطق",coachSpeak:"تحدث",coachModel:"استمع",coachFix:"تصحيحات",lRecent:"آخر عمليات البحث",tSearch:"قاموس",tNotebook:"دفتر",tFlashcard:"بطاقات",tProgress:"تقدم",whenU:"✓ استخدم",whenA:"✗ تجنب",whenF:"رسمي",whenC:"عامي",exF:"رسمي",exC:"عامي",exAc:"أكاديمي",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'fr',flag:'🇫🇷',label:'FR',name:'french',      h1:"Ressentez le Mot",    tag:"Sens · Prononciation · Étymologie",       search:"Entrez un mot...",         btn:"Chercher →",loading:"Analyse en cours...",     youglish:"YouTube", lMeaning:"Sens",        lEtym:"Étymologie", lWhen:"Quand l'utiliser",  lSyn:"Synonymes", lAnt:"Antonymes", lColloc:"Collocations", lExamples:"Exemples",    lNuance:"Nuances",     lMistakes:"Erreurs",  lCoach:"🎤 Coach de prononciation",coachSpeak:"Parlez",coachModel:"Écouter",coachFix:"Corrections",lRecent:"Recherches récentes",tSearch:"Dictionnaire",tNotebook:"Cahier",tFlashcard:"Fiches",tProgress:"Progrès",whenU:"✓ Utiliser",whenA:"✗ Éviter",whenF:"Formel",whenC:"Familier",exF:"Formel",exC:"Familier",exAc:"Académique",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'de',flag:'🇩🇪',label:'DE',name:'german',      h1:"Das Wort Fühlen",     tag:"Bedeutung · Aussprache · Etymologie",     search:"Wort eingeben...",         btn:"Suchen →",  loading:"Groq analysiert...",      youglish:"YouTube", lMeaning:"Bedeutung",   lEtym:"Etymologie", lWhen:"Wann verwenden",    lSyn:"Synonyme",  lAnt:"Antonyme",  lColloc:"Kollokationen",lExamples:"Beispiele",   lNuance:"Nuancen",     lMistakes:"Fehler",   lCoach:"🎤 Aussprache-Coach",coachSpeak:"Jetzt sprechen",coachModel:"Vorbild",coachFix:"Korrekturen",lRecent:"Letzte Suchanfragen",tSearch:"Wörterbuch",tNotebook:"Notizbuch",tFlashcard:"Lernkarten",tProgress:"Fortschritt",whenU:"✓ Verwenden",whenA:"✗ Vermeiden",whenF:"Formell",whenC:"Umgangsspr.",exF:"Formell",exC:"Umgangsspr.",exAc:"Akademisch",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'es',flag:'🇪🇸',label:'ES',name:'spanish',     h1:"Siente la Palabra",   tag:"Significado · Pronunciación · Etimología",search:"Escribe una palabra...",   btn:"Buscar →",  loading:"Groq analizando...",      youglish:"YouTube", lMeaning:"Significado", lEtym:"Etimología", lWhen:"Cuándo usarla",     lSyn:"Sinónimos", lAnt:"Antónimos", lColloc:"Colocaciones", lExamples:"Ejemplos",    lNuance:"Matices",     lMistakes:"Errores",  lCoach:"🎤 Coach de pronunciación",coachSpeak:"Habla ahora",coachModel:"Escuchar",coachFix:"Correcciones",lRecent:"Búsquedas recientes",tSearch:"Diccionario",tNotebook:"Cuaderno",tFlashcard:"Tarjetas",tProgress:"Progreso",whenU:"✓ Usar",whenA:"✗ Evitar",whenF:"Formal",whenC:"Coloquial",exF:"Formal",exC:"Coloquial",exAc:"Académico",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'zh',flag:'🇨🇳',label:'ZH',name:'chinese',     h1:"感受这个词",           tag:"含义 · 发音 · 词源",                       search:"输入英语单词...",          btn:"搜索 →",    loading:"分析中...",               youglish:"YouTube", lMeaning:"核心含义",    lEtym:"词源",       lWhen:"何时使用",          lSyn:"同义词",    lAnt:"反义词",    lColloc:"搭配词",        lExamples:"例句",        lNuance:"细微差别",    lMistakes:"常见错误", lCoach:"🎤 发音教练",coachSpeak:"开始说话",coachModel:"听示范",coachFix:"纠正",lRecent:"最近搜索",tSearch:"词典",tNotebook:"笔记本",tFlashcard:"闪卡",tProgress:"进度",whenU:"✓ 使用",whenA:"✗ 避免",whenF:"正式",whenC:"口语",exF:"正式",exC:"口语",exAc:"学术",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'ja',flag:'🇯🇵',label:'JA',name:'japanese',    h1:"言葉を感じよう",       tag:"意味 · 発音 · 語源",                       search:"英単語を入力...",          btn:"検索 →",    loading:"分析中...",               youglish:"YouTube", lMeaning:"意味",        lEtym:"語源",       lWhen:"使うべきとき",      lSyn:"同義語",    lAnt:"反対語",    lColloc:"コロケーション",lExamples:"例文",        lNuance:"ニュアンス",  lMistakes:"よくある間違い",lCoach:"🎤 発音コーチ",coachSpeak:"話してください",coachModel:"手本を聞く",coachFix:"修正",lRecent:"最近の検索",tSearch:"辞書",tNotebook:"ノート",tFlashcard:"フラッシュカード",tProgress:"進捗",whenU:"✓ 使う",whenA:"✗ 避ける",whenF:"フォーマル",whenC:"カジュアル",exF:"フォーマル",exC:"カジュアル",exAc:"学術的",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'ko',flag:'🇰🇷',label:'KO',name:'korean',      h1:"단어를 느껴보세요",    tag:"의미 · 발음 · 어원",                       search:"영어 단어 입력...",        btn:"검색 →",    loading:"분석 중...",              youglish:"YouTube", lMeaning:"핵심 의미",   lEtym:"어원",       lWhen:"언제 사용",         lSyn:"동의어",    lAnt:"반의어",    lColloc:"연어",          lExamples:"예문",        lNuance:"뉘앙스",      lMistakes:"흔한 실수",lCoach:"🎤 발음 코치",coachSpeak:"말해보세요",coachModel:"예시 듣기",coachFix:"수정",lRecent:"최근 검색",tSearch:"사전",tNotebook:"노트",tFlashcard:"플래시카드",tProgress:"진도",whenU:"✓ 사용",whenA:"✗ 피하기",whenF:"격식체",whenC:"구어체",exF:"격식체",exC:"구어체",exAc:"학술체",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'hi',flag:'🇮🇳',label:'HI',name:'hindi',       h1:"शब्द को महसूस करें",  tag:"अर्थ · उच्चारण · व्युत्पत्ति",           search:"अंग्रेजी शब्द...",        btn:"खोजें →",  loading:"विश्लेषण...",             youglish:"YouTube", lMeaning:"मुख्य अर्थ", lEtym:"उत्पत्ति",   lWhen:"कब उपयोग करें",    lSyn:"समानार्थी",lAnt:"विलोम",    lColloc:"कोलोकेशन",     lExamples:"उदाहरण",      lNuance:"सूक्ष्म अंतर",lMistakes:"सामान्य गलतियाँ",lCoach:"🎤 उच्चारण कोच",coachSpeak:"बोलें",coachModel:"सुनें",coachFix:"सुधार",lRecent:"हाल की खोजें",tSearch:"शब्दकोश",tNotebook:"नोटबुक",tFlashcard:"फ्लैशकार्ड",tProgress:"प्रगति",whenU:"✓ उपयोग करें",whenA:"✗ बचें",whenF:"औपचारिक",whenC:"अनौपचारिक",exF:"औपचारिक",exC:"अनौपचारिक",exAc:"शैक्षणिक",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'pt',flag:'🇧🇷',label:'PT',name:'portuguese',  h1:"Sinta a Palavra",     tag:"Significado · Pronúncia · Etimologia",    search:"Digite uma palavra...",   btn:"Buscar →",  loading:"Analisando...",           youglish:"YouTube", lMeaning:"Significado", lEtym:"Etimologia", lWhen:"Quando usar",       lSyn:"Sinônimos", lAnt:"Antônimos", lColloc:"Colocações",   lExamples:"Exemplos",    lNuance:"Nuances",     lMistakes:"Erros",    lCoach:"🎤 Coach de pronúncia",coachSpeak:"Fale agora",coachModel:"Ouvir",coachFix:"Correções",lRecent:"Pesquisas recentes",tSearch:"Dicionário",tNotebook:"Caderno",tFlashcard:"Fichas",tProgress:"Progresso",whenU:"✓ Usar",whenA:"✗ Evitar",whenF:"Formal",whenC:"Coloquial",exF:"Formal",exC:"Coloquial",exAc:"Acadêmico",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'it',flag:'🇮🇹',label:'IT',name:'italian',     h1:"Senti la Parola",     tag:"Significato · Pronuncia · Etimologia",    search:"Inserisci una parola...", btn:"Cerca →",   loading:"Analisi in corso...",     youglish:"YouTube", lMeaning:"Significato", lEtym:"Etimologia", lWhen:"Quando usarla",     lSyn:"Sinonimi",  lAnt:"Contrari",  lColloc:"Collocazioni", lExamples:"Esempi",      lNuance:"Sfumature",   lMistakes:"Errori",   lCoach:"🎤 Coach pronuncia",coachSpeak:"Parla ora",coachModel:"Ascolta",coachFix:"Correzioni",lRecent:"Ricerche recenti",tSearch:"Dizionario",tNotebook:"Quaderno",tFlashcard:"Schede",tProgress:"Progresso",whenU:"✓ Usare",whenA:"✗ Evitare",whenF:"Formale",whenC:"Informale",exF:"Formale",exC:"Informale",exAc:"Accademico",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'id',flag:'🇮🇩',label:'ID',name:'indonesian',  h1:"Rasakan Katanya",     tag:"Makna · Pengucapan · Etimologi",          search:"Ketik kata...",           btn:"Cari →",    loading:"Sedang menganalisis...",  youglish:"YouTube", lMeaning:"Makna Utama", lEtym:"Etimologi",  lWhen:"Kapan digunakan",   lSyn:"Sinonim",   lAnt:"Antonim",   lColloc:"Kolokasi",     lExamples:"Contoh",      lNuance:"Nuansa",      lMistakes:"Kesalahan",lCoach:"🎤 Pelatih Pengucapan",coachSpeak:"Bicara sekarang",coachModel:"Dengar",coachFix:"Koreksi",lRecent:"Pencarian terbaru",tSearch:"Kamus",tNotebook:"Catatan",tFlashcard:"Kartu",tProgress:"Kemajuan",whenU:"✓ Gunakan",whenA:"✗ Hindari",whenF:"Formal",whenC:"Kasual",exF:"Formal",exC:"Kasual",exAc:"Akademis",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'pl',flag:'🇵🇱',label:'PL',name:'polish',      h1:"Poczuj Słowo",        tag:"Znaczenie · Wymowa · Etymologia",         search:"Wpisz słowo...",          btn:"Szukaj →",  loading:"Groq analizuje...",       youglish:"YouTube", lMeaning:"Znaczenie",   lEtym:"Etymologia", lWhen:"Kiedy używać",      lSyn:"Synonimy",  lAnt:"Antonimy",  lColloc:"Kolokacje",    lExamples:"Przykłady",   lNuance:"Niuanse",     lMistakes:"Błędy",    lCoach:"🎤 Trener wymowy",coachSpeak:"Mów teraz",coachModel:"Posłuchaj",coachFix:"Poprawki",lRecent:"Ostatnie wyszukiwania",tSearch:"Słownik",tNotebook:"Zeszyt",tFlashcard:"Fiszki",tProgress:"Postęp",whenU:"✓ Używaj",whenA:"✗ Unikaj",whenF:"Formalny",whenC:"Potoczny",exF:"Formalny",exC:"Potoczny",exAc:"Akademicki",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'uk',flag:'🇺🇦',label:'UK',name:'ukrainian',   h1:"Відчуй Слово",        tag:"Значення · Вимова · Етимологія",          search:"Введіть слово...",        btn:"Шукати →",  loading:"Groq аналізує...",        youglish:"YouTube", lMeaning:"Значення",    lEtym:"Етимологія", lWhen:"Коли використовувати",lSyn:"Синоніми",  lAnt:"Антоніми",  lColloc:"Колокації",    lExamples:"Приклади",    lNuance:"Нюанси",      lMistakes:"Помилки",  lCoach:"🎤 Тренер вимови",coachSpeak:"Говоріть",coachModel:"Послухати",coachFix:"Виправлення",lRecent:"Останні пошуки",tSearch:"Словник",tNotebook:"Зошит",tFlashcard:"Картки",tProgress:"Прогрес",whenU:"✓ Використовувати",whenA:"✗ Уникати",whenF:"Офіційно",whenC:"Розмовно",exF:"Офіційний",exC:"Розмовний",exAc:"Академічний",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+  { code:'kk',flag:'🇰🇿',label:'KK',name:'kazakh',      h1:"Сөзді сез",           tag:"Мағынасы · Айтылуы · Этимология",        search:"Ағылшын сөзін енгізіңіз...",btn:"Іздеу →",loading:"Groq талдауда...",       youglish:"YouTube", lMeaning:"Мағынасы",    lEtym:"Этимология", lWhen:"Қашан қолдану",     lSyn:"Синонимдер",lAnt:"Антонимдер",lColloc:"Коллокациялар",lExamples:"Мысалдар",  lNuance:"Нюанстар",    lMistakes:"Қателер",  lCoach:"🎤 Айтылу тренері",coachSpeak:"Айтыңыз",coachModel:"Тыңдау",coachFix:"Түзетулер",lRecent:"Соңғы іздеулер",tSearch:"Сөздік",tNotebook:"Дәптер",tFlashcard:"Флэшкарталар",tProgress:"Прогресс",whenU:"✓ Қолдану",whenA:"✗ Болдырмау",whenF:"Ресми",whenC:"Сөйлеу",exF:"Ресми",exC:"Сөйлеу",exAc:"Академиялық",spk:"🔊 ...",spkDone:"✓",spkFail:"⚠️"},
+];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let apiKey = localStorage.getItem('groq_key') || '';
+let currentLang = localStorage.getItem('ui_lang') || 'uz';
+let currentWord = '';
+let lastData = null;
+let recognition = null;
+let isRecording = false;
+
+function getLang() { return LANGS.find(l=>l.code===currentLang)||LANGS[0]; }
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name==='notebook')  renderNotebook();
+  if (name==='flashcard') renderFlashcard();
+  if (name==='progress')  renderProgress();
+}
+
+// ════════════════════════════════════════════
+// LANG
+// ════════════════════════════════════════════
+function buildLangGrid() {
+  const grid = document.getElementById('langGrid');
+  grid.innerHTML = '';
+  LANGS.forEach(l => {
+    const btn = document.createElement('button');
+    btn.className = 'lang-btn'+(l.code===currentLang?' active':'');
+    btn.innerHTML = `<span class="lang-flag">${l.flag}</span>${l.label}`;
+    btn.onclick = ()=>setLang(l.code);
+    grid.appendChild(btn);
+  });
+}
+
+function setLang(code) {
+  currentLang = code;
+  localStorage.setItem('ui_lang', code);
+  buildLangGrid();
+  const u = getLang();
+  document.getElementById('h1text').textContent = u.h1;
+  document.getElementById('tagtext').textContent = u.tag;
+  document.getElementById('wordInput').placeholder = u.search;
+  document.getElementById('searchBtn').textContent = u.btn;
+  document.getElementById('loadingSub').textContent = u.loading;
+  document.getElementById('youglishLabel').textContent = u.youglish;
+  document.getElementById('listenCoachLabel').textContent = u.coachSpeak;
+  document.getElementById('modelLabel').textContent = u.coachModel;
+  ['Meaning','Etym','When','Syn','Ant','Colloc','Examples','Nuance','Mistakes','Coach','Recent'].forEach(k=>{
+    const el=document.getElementById('l'+k); if(el) el.textContent=u['l'+k];
+  });
+  ['Search','Notebook','Flashcard','Progress'].forEach(k=>{
+    const el=document.getElementById('t'+k); if(el) el.textContent=u['t'+k];
+  });
+  if (lastData) renderResult(lastData);
+}
+
+// ════════════════════════════════════════════
+// API KEY
+// ════════════════════════════════════════════
+window.onload = () => {
+  buildLangGrid();
+  setLang(currentLang);
+  updateBadge();
+  renderHistory();
+  if (apiKey) {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('keyStatus').style.display = 'block';
+    document.getElementById('keyStatus').textContent = '✓ API key saqlangan';
+  }
+};
+
+function saveKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) return;
+  apiKey = k;
+  localStorage.setItem('groq_key', k);
+  document.getElementById('keyStatus').style.display='block';
+  document.getElementById('keyStatus').textContent='✓ Saqlandi!';
+}
+
+document.getElementById('wordInput').addEventListener('keydown', e=>{ if(e.key==='Enter') lookupWord(); });
+function q(w) { document.getElementById('wordInput').value=w; lookupWord(); }
+
+// ════════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════════
+function renderHistory() {
+  const row = document.getElementById('historyRow');
+  if (!searchHist.length) { row.innerHTML=''; return; }
+  row.innerHTML = searchHist.slice(0,10).map(h=>
+    `<div class="history-chip" onclick="q('${h.word}')">
+      <span>${h.word}</span>
+      ${h.translation?`<span style="color:var(--accent3);font-size:10px">${h.translation}</span>`:''}
+      <span class="hc-remove" onclick="removeHistory(event,'${h.word}')">×</span>
+    </div>`
+  ).join('');
+}
+
+function removeHistory(e, word) {
+  e.stopPropagation();
+  searchHist = searchHist.filter(h=>h.word!==word);
+  save('nb_history', searchHist);
+  renderHistory();
+}
+
+// ════════════════════════════════════════════
+// YOUGLISH + SPEAK
+// ════════════════════════════════════════════
+function openYouglish(e) {
+  e.preventDefault();
+  if (currentWord) window.open('https://youglish.com/pronounce/'+encodeURIComponent(currentWord)+'/english','_blank');
+}
+
+function speakWord(word, accent) {
+  const u=getLang(); const status=document.getElementById('speakStatus');
+  status.style.display='block'; status.textContent=u.spk;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    function doSpeak(voices) {
+      let voice = accent==='en-GB'
+        ? (voices.find(v=>v.lang==='en-GB')||voices.find(v=>v.name.toLowerCase().includes('british'))||voices.find(v=>v.lang.startsWith('en')))
+        : (voices.find(v=>v.lang==='en-US')||voices.find(v=>v.lang.startsWith('en-US'))||voices.find(v=>v.lang.startsWith('en')));
+      const utt=new SpeechSynthesisUtterance(word);
+      utt.lang=accent; utt.rate=0.82; if(voice) utt.voice=voice;
+      utt.onend=()=>{ status.textContent=u.spkDone; setTimeout(()=>status.style.display='none',1500); };
+      utt.onerror=()=>tryDictAPI(word,accent,status,u);
+      window.speechSynthesis.speak(utt);
+    }
+    const voices=window.speechSynthesis.getVoices();
+    if(voices.length===0) window.speechSynthesis.onvoiceschanged=()=>doSpeak(window.speechSynthesis.getVoices());
+    else doSpeak(voices);
+  } else tryDictAPI(word,accent,status,u);
+}
+
+function tryDictAPI(word, accent, status, u) {
+  fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word))
+    .then(r=>r.json()).then(data=>{
+      let url=null;
+      if(data&&data[0]&&data[0].phonetics){
+        const ph=data[0].phonetics;
+        const uk=accent==='en-GB'?ph.find(p=>p.audio&&p.audio.includes('-uk')):null;
+        const any=ph.find(p=>p.audio&&p.audio.length>0);
+        url=(uk||any)?(uk||any).audio:null;
+      }
+      if(url){
+        const a=new Audio(url);
+        a.onended=()=>{ status.textContent=u.spkDone; setTimeout(()=>status.style.display='none',1500); };
+        a.onerror=()=>{ status.textContent=u.spkFail; setTimeout(()=>status.style.display='none',2500); };
+        a.play().catch(()=>{ status.textContent=u.spkFail; setTimeout(()=>status.style.display='none',2500); });
+      } else { status.textContent=u.spkFail; setTimeout(()=>status.style.display='none',2500); }
+    }).catch(()=>{ status.textContent=u.spkFail; setTimeout(()=>status.style.display='none',2500); });
+}
+
+// ════════════════════════════════════════════
+// PRONUNCIATION COACH
+// ════════════════════════════════════════════
+function listenCoach() {
+  if (!currentWord) return;
+  if (isRecording) { stopRecording(); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ showCoachFeedback([{icon:'⚠️',text:'Chrome yoki Edge ishlatng'}]); return; }
+  recognition=new SR(); recognition.lang='en-US'; recognition.interimResults=false; recognition.maxAlternatives=3;
+  recognition.onstart=()=>{ isRecording=true; document.getElementById('listenCoachBtn').classList.add('recording'); document.getElementById('listenCoachLabel').textContent='⏹ To\'xtatish'; };
+  recognition.onresult=(e)=>{ const heard=e.results[0][0].transcript.trim().toLowerCase(); stopRecording(); analyzeWithGroq(heard); };
+  recognition.onerror=(e)=>{ stopRecording(); showCoachFeedback([{icon:'⚠️',text:e.error==='not-allowed'?'Mikrofon ruxsati kerak':e.error==='no-speech'?'Ovoz aniqlanmadi':'Xatolik: '+e.error}]); };
+  recognition.onend=()=>{ if(isRecording) stopRecording(); };
+  recognition.start();
+}
+
+function stopRecording() {
+  isRecording=false;
+  document.getElementById('listenCoachBtn').classList.remove('recording');
+  document.getElementById('listenCoachLabel').textContent=getLang().coachSpeak||"O'zingiz gapiring";
+  if(recognition){try{recognition.stop();}catch(e){} recognition=null;}
+}
+
+async function analyzeWithGroq(heard) {
+  const u=getLang();
+  document.getElementById('coachScoreWrap').style.display='flex';
+  document.getElementById('scoreSaid').textContent=heard||'(aniqlanmadi)';
+  document.getElementById('coachFeedback').style.display='none';
+  document.getElementById('coachSyllables').style.display='none';
+  if(!heard){ showScore(0); showCoachFeedback([{icon:'🎤',text:'Ovoz aniqlanmadi'}]); return; }
+  try {
+    const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",temperature:0.1,max_tokens:350,
+        messages:[{role:"system",content:"Pronunciation coach. Return valid JSON only."},
+          {role:"user",content:`Target word: "${currentWord}". User said: "${heard}". Language for feedback: ${u.name}.
+Return JSON: {"score":0-100,"syllables":[{"text":"syl","status":"good|bad|ok"}],"feedback":[{"icon":"❌","text":"feedback in ${u.name}"}],"tip":"one tip in ${u.name}"}`}]})});
+    const data=await res.json();
+    const raw=data.choices[0].message.content.replace(/\`\`\`json|\`\`\`/g,'').trim();
+    let d; try{d=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);d=m?JSON.parse(m[0]):null;}
+    if(d){
+      showScore(d.score||calcSim(heard,currentWord));
+      if(d.syllables) showSyllables(d.syllables);
+      const items=(d.feedback||[]).map(f=>({icon:f.icon||'💡',text:f.text}));
+      if(d.tip) items.push({icon:'🏆',text:d.tip});
+      if(items.length) showCoachFeedback(items);
+    } else showScore(calcSim(heard,currentWord));
+  } catch{ showScore(calcSim(heard,currentWord)); showCoachFeedback([{icon:'💡',text:calcSim(heard,currentWord)>=80?'Ajoyib!':'Qaytadan urinib ko\'ring'}]); }
+}
+
+function calcSim(a,b){
+  a=a.toLowerCase().replace(/[^a-z]/g,''); b=b.toLowerCase().replace(/[^a-z]/g,'');
+  if(a===b) return 100; if(!a||!b) return 0;
+  const l=a.length>b.length?a:b, s=a.length>b.length?b:a;
+  let m=0; for(let i=0;i<s.length;i++) if(s[i]===l[i]) m++;
+  return Math.round((m/l.length)*100);
+}
+
+function showScore(score){
+  const c=document.getElementById('scoreCircle'),t=document.getElementById('scoreText');
+  c.style.strokeDashoffset=213.6-(score/100)*213.6;
+  const col=score>=80?'#6affcd':score>=50?'#ffcc44':'#ff6a8e';
+  c.style.stroke=col; t.textContent=score+'%'; t.style.fill=col;
+}
+
+function showSyllables(syls){
+  const el=document.getElementById('coachSyllables'); el.style.display='flex';
+  el.innerHTML=`<span class="syl-label">${currentWord}</span>`+syls.map(s=>`<div class="syl-block ${s.status}">${s.text}</div>`).join('')+
+    `<button class="coach-try-again" onclick="resetCoach()">↺</button>`;
+}
+
+function showCoachFeedback(items){
+  const el=document.getElementById('coachFeedback'); el.style.display='block';
+  el.innerHTML=`<div class="fb-title">${getLang().coachFix||'Tuzatishlar'}</div><div class="fb-items">`+
+    items.map(i=>`<div class="fb-item"><span class="fb-icon">${i.icon}</span><span>${i.text}</span></div>`).join('')+'</div>';
+}
+
+function resetCoach(){
+  document.getElementById('coachScoreWrap').style.display='none';
+  document.getElementById('coachFeedback').style.display='none';
+  document.getElementById('coachSyllables').style.display='none';
+  showScore(0);
+}
+
+// ════════════════════════════════════════════
+// LOOKUP
+// ════════════════════════════════════════════
+async function lookupWord() {
+  const word=document.getElementById('wordInput').value.trim();
+  if(!word) return;
+  if(!apiKey){alert('Avval Groq API keyingizni kiriting!'); return;}
+  currentWord=word; resetCoach();
+  const u=getLang();
+  document.getElementById('loading').style.display='block';
+  document.getElementById('result').style.display='none';
+  document.getElementById('error').style.display='none';
+  document.getElementById('searchBtn').disabled=true;
+  document.getElementById('loadingWord').textContent='"'+word+'"';
+
+  const prompt=`Expert English lexicographer. Analyze: "${word}"
+All explanatory text in ${u.name}. English sentences stay English but add ${u.name} translation.
+RETURN ONLY VALID JSON:
+{"word":"${word}","translation":"1-3 word ${u.name} translation","partOfSpeech":"pos","cefr":"A1-C2",
+"phonetics":{"american":"/IPA/","british":"/IPA/"},
+"coreMeaning":"2-3 sentences in ${u.name}. Use <strong> for key ideas.",
+"etymology":"origin in ${u.name}. Wrap roots in <em>.",
+"whenToUse":[{"type":"use","text":"..."},{"type":"avoid","text":"..."},{"type":"formal","text":"..."},{"type":"casual","text":"..."}],
+"synonyms":[{"word":"s1","context":"${u.name} context"},{"word":"s2","context":"..."},{"word":"s3","context":"..."},{"word":"s4","context":"..."}],
+"antonyms":[{"word":"a1","context":"${u.name} contrast"},{"word":"a2","context":"..."},{"word":"a3","context":"..."}],
+"collocations":[{"phrase":"p1","example":"English.","translation":"${u.name}"},{"phrase":"p2","example":"English.","translation":"${u.name}"},{"phrase":"p3","example":"English.","translation":"${u.name}"},{"phrase":"p4","example":"English.","translation":"${u.name}"}],
+"examples":[{"context":"formal","sentence":"English <em>${word}</em>.","translation":"${u.name}"},{"context":"casual","sentence":"English <em>${word}</em>.","translation":"${u.name}"},{"context":"academic","sentence":"English <em>${word}</em>.","translation":"${u.name}"}],
+"nuance":"2-3 sentences in ${u.name}. Wrap key terms in <span class='hl'>term</span>.",
+"commonMistakes":[{"icon":"⚠️","text":"${u.name} mistake. <span class='wrong'>wrong</span> → <span class='right'>correct</span>"},{"icon":"💡","text":"${u.name} tip"}]}`;
+
+  try {
+    const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",temperature:0.2,max_tokens:1800,
+        messages:[{role:"system",content:"Expert lexicographer. JSON only. No markdown."},
+                  {role:"user",content:prompt}]})});
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const raw=data.choices[0].message.content.replace(/```json|```/g,'').trim();
+    let d; try{d=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)d=JSON.parse(m[0]);else throw new Error('JSON parse xatosi');}
+    lastData=d;
+    addHistory(d.word||word, d.translation||'');
+    renderResult(d);
+  } catch(err){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error').style.display='block';
+    document.getElementById('error').textContent='Xatolik: '+(err.message||'Qaytadan urinib ko\'ring');
+  }
+  document.getElementById('searchBtn').disabled=false;
+}
+
+// ════════════════════════════════════════════
+// RENDER RESULT
+// ════════════════════════════════════════════
+function renderResult(d) {
+  const u=getLang();
+  document.getElementById('resWord').textContent=d.word||currentWord;
+  document.getElementById('resTranslation').textContent=d.translation||'';
+  document.getElementById('resPos').innerHTML=`<span class="word-pos">${d.partOfSpeech||''}</span>`;
+  const cefr=(d.cefr||'').toUpperCase().trim();
+  document.getElementById('resCefr').innerHTML=cefr?`<span class="cefr-badge ${cefr.startsWith('A')?'cefr-a':cefr.startsWith('B')?'cefr-b':'cefr-c'}">${cefr}</span>`:'';
+
+  updateSaveBtn(isInNotebook(d.word||currentWord));
+
+  const ph=document.getElementById('resPhonetics'); ph.innerHTML='';
+  [['🇺🇸 US',d.phonetics?.american,'en-US'],['🇬🇧 UK',d.phonetics?.british,'en-GB']].forEach(([label,ipa,lang])=>{
+    const el=document.createElement('div'); el.className='phonetic-tag';
+    el.innerHTML=`<span class="phonetic-label">${label}</span><span class="phonetic-text">${ipa||''}</span><div class="play-icon"><svg viewBox="0 0 10 10" fill="white"><polygon points="2,1 9,5 2,9"/></svg></div>`;
+    el.onclick=()=>speakWord(d.word||currentWord,lang); ph.appendChild(el);
+  });
+
+  document.getElementById('resMeaning').innerHTML=d.coreMeaning||'';
+  document.getElementById('resEtymology').innerHTML=d.etymology||'';
+
+  const wl={use:u.whenU,avoid:u.whenA,formal:u.whenF,casual:u.whenC};
+  const wd=d.whenToUse||d.when_to_use||[];
+  document.getElementById('resWhen').innerHTML=wd.length
+    ?wd.map(w=>`<div class="when-item"><span class="when-badge ${w.type||'use'}">${wl[w.type]||w.type}</span><span class="when-text">${w.text||''}</span></div>`).join('')
+    :`<div class="when-item"><span class="when-badge use">${u.whenU}</span><span class="when-text">—</span></div>`;
+
+  document.getElementById('resSynonyms').innerHTML=(d.synonyms||[]).map(s=>
+    `<div class="word-chip"><div class="chip-btn syn" onclick="q('${s.word}')">${s.word}</div><div class="chip-ctx">${s.context||''}</div></div>`).join('');
+  document.getElementById('resAntonyms').innerHTML=(d.antonyms||[]).map(a=>
+    `<div class="word-chip"><div class="chip-btn ant" onclick="q('${a.word}')">${a.word}</div><div class="chip-ctx">${a.context||''}</div></div>`).join('');
+  document.getElementById('resCollocations').innerHTML=(d.collocations||[]).map(c=>
+    `<div class="colloc-item"><span class="colloc-phrase">${c.phrase}</span><div class="colloc-right"><div class="colloc-ex">${c.example}</div>${c.translation?`<div class="colloc-tr">${c.translation}</div>`:''}</div></div>`).join('');
+
+  const ec={formal:u.exF,casual:u.exC,academic:u.exAc};
+  document.getElementById('resExamples').innerHTML=(d.examples||[]).map(e=>
+    `<div class="example-item ${e.context}"><div class="example-ctx">${ec[e.context]||e.context}</div><div class="example-text">"${e.sentence}"</div>${e.translation?`<div class="example-tr">${e.translation}</div>`:''}</div>`).join('');
+  document.getElementById('resNuance').innerHTML=d.nuance||'';
+  document.getElementById('resMistakes').innerHTML=(d.commonMistakes||[]).map(m=>
+    `<div class="mistake-item"><div class="mistake-icon">${m.icon}</div><div class="mistake-text">${m.text}</div></div>`).join('');
+
+  document.getElementById('loading').style.display='none';
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ════════════════════════════════════════════
+// NOTEBOOK PAGE
+// ════════════════════════════════════════════
+function renderNotebook() {
+  const list=document.getElementById('notebookList');
+  if(!notebook.length){
+    list.innerHTML=`<div class="notebook-empty"><div class="ne-icon">📚</div><p>Hali hech qanday so'z saqlanmagan.<br>So'z qidirib, <strong style="color:var(--accent3)">＋ Saqlash</strong> tugmasini bosing.</p></div>`;
+    return;
+  }
+  list.innerHTML=`<div class="notebook-grid">`+notebook.map(n=>{
+    const cefr=n.cefr.toUpperCase();
+    const cefrCls=cefr.startsWith('A')?'cefr-a':cefr.startsWith('B')?'cefr-b':'cefr-c';
+    const date=new Date(n.savedAt).toLocaleDateString();
+    return `<div class="nb-card" onclick="goToWord('${n.word}')">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span class="nb-word">${n.word}</span>
+          ${cefr?`<span class="nb-cefr ${cefrCls}">${cefr}</span>`:''}
+          <span class="nb-pos">${n.pos}</span>
+        </div>
+        <div class="nb-tr">${n.translation}</div>
+        ${n.meaning?`<div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4">${n.meaning.slice(0,80)}${n.meaning.length>80?'…':''}</div>`:''}
+      </div>
+      <div class="nb-meta">
+        <span class="nb-date">${date}</span>
+        <button class="nb-del" onclick="event.stopPropagation();removeFromNotebook('${n.word}');renderNotebook()">×</button>
+      </div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+
+function goToWord(word) {
+  showPage('search');
+  document.getElementById('wordInput').value=word;
+  lookupWord();
+}
+
+function clearNotebook() {
+  if(!confirm('Barcha so\'zlarni o\'chirasizmi?')) return;
+  notebook=[]; save('nb_words',notebook); updateBadge(); renderNotebook();
+}
+
+// ════════════════════════════════════════════
+// FLASHCARD PAGE
+// ════════════════════════════════════════════
+let fcQueue=[], fcIndex=0, fcSession={good:0,ok:0,bad:0};
+
+function renderFlashcard() {
+  const el=document.getElementById('fcContent');
+  if(!notebook.length){
+    el.innerHTML=`<div class="fc-empty"><div style="font-size:40px;margin-bottom:12px">🃏</div><p style="color:var(--muted);font-size:14px">Daftaringizda so'z yo'q.<br>Avval bir nechta so'z saqlang.</p></div>`;
+    return;
+  }
+  // Sort by nextReview (due first)
+  fcQueue=[...notebook].sort((a,b)=>(a.nextReview||0)-(b.nextReview||0));
+  fcIndex=0; fcSession={good:0,ok:0,bad:0};
+  showFC();
+}
+
+function showFC() {
+  const el=document.getElementById('fcContent');
+  if(fcIndex>=fcQueue.length){ showFCDone(); return; }
+  const n=fcQueue[fcIndex];
+  const total=fcQueue.length;
+  const pct=Math.round((fcIndex/total)*100);
+  el.innerHTML=`
+    <div class="fc-wrap">
+      <div class="fc-progress-bar"><div class="fc-progress-fill" style="width:${pct}%"></div></div>
+      <div class="fc-counter">${fcIndex+1} / ${total}</div>
+      <div class="fc-card" id="fcCard" onclick="flipCard()">
+        <div class="fc-inner" id="fcInner">
+          <div class="fc-front">
+            <div class="fc-word">${n.word}</div>
+            <div class="fc-ipa">${n.ipa_us||''}</div>
+            <div class="fc-hint">bosing →</div>
+          </div>
+          <div class="fc-back">
+            <div class="fc-translation">${n.translation}</div>
+            <div class="fc-meaning">${n.meaning||''}</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-flip-hint" id="fcFlipHint">Kartani bosib tarjimasini ko'ring</div>
+      <div class="fc-btns" id="fcBtns" style="display:none">
+        <button class="fc-btn bad"  onclick="fcAnswer(1)">😓 Qiyin</button>
+        <button class="fc-btn ok"   onclick="fcAnswer(3)">🤔 O'rta</button>
+        <button class="fc-btn good" onclick="fcAnswer(5)">✅ Oson</button>
+      </div>
+    </div>`;
+}
+
+function flipCard() {
+  document.getElementById('fcCard').classList.toggle('flipped');
+  document.getElementById('fcBtns').style.display='flex';
+  document.getElementById('fcFlipHint').style.display='none';
+}
+
+function fcAnswer(quality) {
+  const n=fcQueue[fcIndex];
+  // SM-2 algorithm
+  n.easeFactor=Math.max(1.3,(n.easeFactor||2.5)+0.1-(5-quality)*(0.08+(5-quality)*0.02));
+  if(quality<3){ n.interval=1; }
+  else if(n.interval<=1){ n.interval=quality>=4?4:1; }
+  else { n.interval=Math.round(n.interval*n.easeFactor); }
+  n.nextReview=Date.now()+n.interval*86400000;
+  if(quality>=4) fcSession.good++; else if(quality>=3) fcSession.ok++; else fcSession.bad++;
+  // Update notebook
+  const idx=notebook.findIndex(w=>w.word===n.word);
+  if(idx>=0) notebook[idx]={...notebook[idx], easeFactor:n.easeFactor, interval:n.interval, nextReview:n.nextReview};
+  save('nb_words',notebook);
+  fcIndex++;
+  showFC();
+}
+
+function showFCDone() {
+  const total=fcSession.good+fcSession.ok+fcSession.bad;
+  document.getElementById('fcContent').innerHTML=`
+    <div class="fc-done">
+      <div class="done-icon">🎉</div>
+      <h3>Seans tugadi!</h3>
+      <p>${total} ta so'z ko'rildi<br>✅ ${fcSession.good} oson · 🤔 ${fcSession.ok} o'rta · 😓 ${fcSession.bad} qiyin</p>
+      <button class="fc-restart" onclick="renderFlashcard()">↺ Qayta boshlash</button>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// PROGRESS PAGE
+// ════════════════════════════════════════════
+function renderProgress() {
+  const u=getLang();
+  const todayWords=notebook.filter(n=>new Date(n.savedAt).toISOString().slice(0,10)===todayStr()).length;
+  document.getElementById('statTotal').textContent=notebook.length;
+  document.getElementById('statToday').textContent=todayWords;
+  document.getElementById('statStreak').textContent=stats.streakDays||0;
+  document.getElementById('statSearches').textContent=stats.totalSearches||0;
+
+  // CEFR breakdown
+  const cefrMap={A1:0,A2:0,B1:0,B2:0,C1:0,C2:0};
+  notebook.forEach(n=>{ const c=(n.cefr||'').toUpperCase().trim(); if(cefrMap[c]!==undefined) cefrMap[c]++; });
+  const maxC=Math.max(...Object.values(cefrMap),1);
+  document.getElementById('cefrBreakdown').innerHTML=Object.entries(cefrMap).map(([lvl,cnt])=>{
+    const cls=lvl.startsWith('A')?'a':lvl.startsWith('B')?'b':'c';
+    const col=cls==='a'?'var(--accent3)':cls==='b'?'var(--phoneme)':'var(--accent2)';
+    const pct=cnt?Math.max(4,Math.round(cnt/maxC*100)):0;
+    return `<div class="cefr-row">
+      <span class="cefr-row-label" style="color:${col}">${lvl}</span>
+      <div class="cefr-bar-wrap"><div class="cefr-bar ${cls}" style="width:${pct}%"></div></div>
+      <span class="cefr-count" style="color:${col}">${cnt}</span>
+    </div>`;
+  }).join('');
+
+  // Recent searches
+  document.getElementById('lRecent').textContent=u.lRecent;
+  document.getElementById('recentList').innerHTML=searchHist.slice(0,15).map(h=>{
+    const ago=Math.round((Date.now()-h.searchedAt)/60000);
+    const agoStr=ago<60?ago+'m':Math.round(ago/60)+'h';
+    return `<div class="recent-item" onclick="goToWord('${h.word}')">
+      <span class="recent-word">${h.word}</span>
+      <span class="recent-tr">${h.translation}</span>
+      <span class="recent-time">${agoStr} oldin</span>
+    </div>`;
+  }).join('') || `<div style="color:var(--muted);font-size:13px;padding:12px">Hali qidiruv yo'q</div>`;
+}
+</script>
+</body>
+</html>
